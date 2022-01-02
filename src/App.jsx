@@ -1,30 +1,34 @@
 import React, { useEffect, useState } from "react";
 import { db } from "./config/firebase";
-import { collection, getDocs, addDoc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  orderBy,
+  startAfter,
+  limit,
+  getDocs,
+  addDoc,
+} from "firebase/firestore";
 
 const App = () => {
   const [name, setName] = useState();
   const [number, setNumber] = useState();
   const [users, setUsers] = useState([]);
   const usersCollection = collection(db, "users");
-  const patientsCollections = collection(db, "patients");
 
   useEffect(() => {
     getUsers();
-  }, []);
+  }, [users]);
 
   const setUser = async () => {
     await addDoc(usersCollection, { name: name, number: number });
-    alert("User Added");
-  };
-
-  const setPatient = async () => {
-    await addDoc(patientsCollections, { name: name, number: number });
-    console.log("patient added");
+    setName("");
+    setNumber("");
   };
 
   const getUsers = async () => {
-    const data = await getDocs(usersCollection);
+    const first = query(collection(db, "users"), orderBy("name"), limit(3));
+    const data = await getDocs(first);
     let users = [];
     data.docs.map((doc) => {
       users.push(doc.data());
@@ -35,14 +39,15 @@ const App = () => {
     <div>
       <input
         placeholder="name"
+        value={name}
         onChange={(event) => setName(event.target.value)}
       />
       <input
         placeholder="number"
+        value={number}
         onChange={(event) => setNumber(event.target.value)}
       />
       <button onClick={setUser}>Register</button>
-      <button onClick={setPatient}>Add Patient</button>
       {users.map((user, index) => (
         <p key={index}>{user.name}</p>
       ))}
